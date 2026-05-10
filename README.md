@@ -110,6 +110,7 @@ card_mod:
       --hallwarden-card-muted-text-color: #334155;
       --hallwarden-card-background: linear-gradient(135deg, #f8fafc, #dbeafe);
       --hallwarden-card-child-background: rgba(255, 255, 255, 0.7);
+      --hallwarden-card-child-tint: rgba(255, 251, 246, 0.93);
       --hallwarden-card-chore-background: rgba(255, 255, 255, 0.9);
       --hallwarden-card-popup-background: rgba(255, 255, 255, 0.96);
       --hallwarden-card-popup-overlay-background: rgba(219, 234, 254, 0.68);

@@ -253,6 +253,7 @@ class HallwardenCard extends HTMLElement {
               )
             );
           --ct-surface: var(--hallwarden-card-child-background, var(--chore-card-child-background, rgba(255, 255, 255, 0.76)));
+          --ct-child-card-tint: var(--hallwarden-card-child-tint, rgba(255, 251, 246, 0.93));
           --ct-surface-strong: var(--hallwarden-card-chore-background, var(--chore-card-chore-background, rgba(255, 255, 255, 0.88)));
           --ct-popup-surface: var(--hallwarden-card-popup-background, var(--chore-card-popup-background, var(--ct-surface-strong)));
           --ct-popup-overlay: var(--hallwarden-card-popup-overlay-background, rgba(219, 234, 254, 0.68));
@@ -290,6 +291,7 @@ class HallwardenCard extends HTMLElement {
               )
             );
           --ct-surface: var(--hallwarden-card-child-background, var(--chore-card-child-background, rgba(255, 255, 255, 0.76)));
+          --ct-child-card-tint: var(--hallwarden-card-child-tint, rgba(255, 251, 246, 0.93));
           --ct-surface-strong: var(--hallwarden-card-chore-background, var(--chore-card-chore-background, rgba(255, 255, 255, 0.88)));
           --ct-popup-surface: var(--hallwarden-card-popup-background, var(--chore-card-popup-background, var(--ct-surface-strong)));
           --ct-popup-overlay: var(--hallwarden-card-popup-overlay-background, rgba(219, 234, 254, 0.68));
@@ -306,6 +308,9 @@ class HallwardenCard extends HTMLElement {
 
         ha-card.single-child-card {
           border-left: 8px solid var(--child-color, #2563eb);
+          background:
+            linear-gradient(135deg, var(--child-card-tint, var(--ct-child-card-tint)), rgba(255, 253, 250, 0.9)),
+            var(--ct-card-background);
         }
 
         .card {
@@ -377,11 +382,39 @@ class HallwardenCard extends HTMLElement {
         }
 
         .child {
+          --child-card-tint: var(--ct-child-card-tint);
           border-left: 8px solid var(--child-color, #2563eb);
           border-radius: var(--ct-radius);
           padding: calc(12px * var(--ct-spacing-scale));
-          background: var(--ct-surface);
+          background:
+            linear-gradient(135deg, var(--child-card-tint), rgba(255, 253, 250, 0.9)),
+            var(--ct-surface);
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .child[data-child-color="blue"],
+        ha-card.single-child-card[data-child-color="blue"] {
+          --child-card-tint: rgba(125, 204, 220, 0.28);
+        }
+
+        .child[data-child-color="green"],
+        ha-card.single-child-card[data-child-color="green"] {
+          --child-card-tint: rgba(152, 211, 137, 0.3);
+        }
+
+        .child[data-child-color="orange"],
+        ha-card.single-child-card[data-child-color="orange"] {
+          --child-card-tint: rgba(255, 190, 103, 0.32);
+        }
+
+        .child[data-child-color="pink"],
+        ha-card.single-child-card[data-child-color="pink"] {
+          --child-card-tint: rgba(243, 176, 197, 0.3);
+        }
+
+        .child[data-child-color="purple"],
+        ha-card.single-child-card[data-child-color="purple"] {
+          --child-card-tint: rgba(181, 159, 232, 0.3);
         }
 
         .child-heading {
@@ -568,7 +601,7 @@ class HallwardenCard extends HTMLElement {
     const heading = this._config.title && this._config.title !== "Chores" ? this._config.title : child.name;
     const pendingCount = Number(child.pending_count ?? chores.length) || 0;
 
-    return `<ha-card class="single-child-card" style="--child-color: ${this._escapeAttribute(child.color || "#2563eb")}">
+    return `<ha-card class="single-child-card" data-child-color="${this._escapeAttribute(child.color || "")}" style="--child-color: ${this._escapeAttribute(child.color || "#2563eb")}">
         <section class="card single-child">
           <header>
             <div>
@@ -604,7 +637,7 @@ class HallwardenCard extends HTMLElement {
     const pendingCount = Number(child.pending_count ?? chores.length) || 0;
 
     return `
-      <article class="child" style="--child-color: ${this._escapeAttribute(child.color || "#2563eb")}">
+      <article class="child" data-child-color="${this._escapeAttribute(child.color || "")}" style="--child-color: ${this._escapeAttribute(child.color || "#2563eb")}">
         <div class="child-heading">
           <div class="child-name">${this._escape(child.name)}</div>
           <div class="counts">${pendingCount} pending</div>
