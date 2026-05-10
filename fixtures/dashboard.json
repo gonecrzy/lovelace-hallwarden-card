@@ -1,0 +1,54 @@
+{
+  "date": "2026-05-10",
+  "timezone": "America/Chicago",
+  "clock_fallback": "Sunday, May 10",
+  "children": [
+    {
+      "id": 1,
+      "name": "Ava",
+      "color": "#f59e0b",
+      "pending_count": 2,
+      "completed_count": 1,
+      "reminder_pending_count": 1,
+      "chores": [
+        {
+          "occurrence_id": 101,
+          "chore_id": 11,
+          "title": "Unload dishwasher",
+          "status": "pending",
+          "is_household": false,
+          "has_checklist": true,
+          "reminder_enabled": true
+        },
+        {
+          "occurrence_id": 102,
+          "chore_id": 12,
+          "title": "Feed the dog",
+          "status": "pending",
+          "is_household": false,
+          "has_checklist": false,
+          "reminder_enabled": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Ben",
+      "color": "#2563eb",
+      "pending_count": 1,
+      "completed_count": 0,
+      "reminder_pending_count": 0,
+      "chores": [
+        {
+          "occurrence_id": 103,
+          "chore_id": 13,
+          "title": "Take out trash",
+          "status": "pending",
+          "is_household": true,
+          "has_checklist": false,
+          "reminder_enabled": false
+        }
+      ]
+    }
+  ]
+}

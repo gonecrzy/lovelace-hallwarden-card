@@ -1,0 +1,100 @@
+# Hallwarden Home Assistant Card
+
+This prototype Lovelace card renders the child-facing chore dashboard from the Hallwarden JSON API.
+
+## Install With HACS Custom Repository
+
+1. Add this repository as a custom repository in HACS.
+2. Select category `Dashboard`.
+3. Download `Hallwarden Card`.
+4. Add the dashboard resource:
+
+```yaml
+url: /hacsfiles/lovelace-hallwarden-card/hallwarden-card.js
+type: module
+```
+
+## Manual Install
+
+Copy `hallwarden-card.js` to your Home Assistant `www/` directory, then add it as a dashboard resource:
+
+```yaml
+url: /local/hallwarden-card.js
+type: module
+```
+
+## Card Config
+
+```yaml
+type: custom:hallwarden-card
+title: Chores
+api_url: http://hallwarden.local:3000
+api_token: dev-ha-token
+refresh_interval: 30
+```
+
+Use `HALLWARDEN_API_TOKEN` on the Hallwarden server to set the bearer token expected by the API.
+
+## Display Options
+
+All options are optional unless noted:
+
+```yaml
+type: custom:hallwarden-card
+api_url: http://hallwarden.local:3000
+api_token: dev-ha-token
+
+# Show one child only. Omit this to show every child returned by the API.
+child_id: 2
+
+# Hide the whole card when no matching chores are visible.
+show_empty: false
+
+# Use the card as display-only by hiding checklist and complete buttons.
+show_complete_button: false
+
+# Limit visible chores per child card.
+show_quantity: 5
+
+# Use compact icon action buttons instead of text buttons.
+use_icons: true
+
+# Return a stable Home Assistant masonry card size.
+fixed_card_size: 3
+
+# Arrange child cards when child_id is omitted.
+# Options: vertical, horizontal, grid, columns.
+# Also accepts common aliases like Grid, column, row.
+layout: grid
+
+# Show checklist details inline under the selected chore or in a popup overlay.
+# Options: inline, popup.
+checklist_mode: inline
+```
+
+When `child_id` is set, the card renders that child as the top-level Home Assistant card instead of nesting a child card inside the main chores card. When `child_id` is omitted, `layout` controls the child-card arrangement inside the main card.
+
+`checklist_mode: inline` is the most reliable Home Assistant mode: tapping `List` expands the checklist directly under that chore title. `checklist_mode: popup` attempts to use Home Assistant's native dialog when available and falls back to a custom overlay otherwise.
+
+## Styling
+
+The card ships with readable defaults, but Home Assistant themes or `card_mod` can override these CSS variables. The old `--chore-card-*` variables still work as a transition fallback, but new configs should use `--hallwarden-card-*`.
+
+```yaml
+card_mod:
+  style: |
+    :host,
+    ha-card {
+      --hallwarden-card-text-color: #111827;
+      --hallwarden-card-muted-text-color: #334155;
+      --hallwarden-card-background: linear-gradient(135deg, #f8fafc, #dbeafe);
+      --hallwarden-card-child-background: rgba(255, 255, 255, 0.7);
+      --hallwarden-card-chore-background: rgba(255, 255, 255, 0.9);
+      --hallwarden-card-popup-background: rgba(255, 255, 255, 0.96);
+      --hallwarden-card-button-background: rgba(15, 23, 42, 0.9);
+      --hallwarden-card-button-text-color: #f8fafc;
+      --hallwarden-card-household-icon-color: #f59e0b;
+      --hallwarden-card-radius: 18px;
+      --hallwarden-card-gap: 12px;
+    }
+```

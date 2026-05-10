@@ -1,0 +1,22 @@
+{
+  "occurrence_id": 101,
+  "title": "Unload dishwasher",
+  "status": "pending",
+  "assigned_child_id": 1,
+  "is_household": false,
+  "can_complete": false,
+  "checklist": [
+    {
+      "id": 201,
+      "label": "Top rack",
+      "required": true,
+      "completed": false
+    },
+    {
+      "id": 202,
+      "label": "Bottom rack",
+      "required": true,
+      "completed": false
+    }
+  ]
+}
