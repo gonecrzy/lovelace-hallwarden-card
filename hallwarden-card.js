@@ -125,7 +125,19 @@ class HallwardenCard extends HTMLElement {
     this._render();
   }
 
-  async _openDetail(occurrenceId, childId) {
+  async _openDetail(occurrenceId, childId, options = {}) {
+    const detailOccurrenceId = Number(occurrenceId);
+    const detailChildId = Number(childId);
+    if (
+      !options.refresh &&
+      this._config.checklist_mode !== "popup" &&
+      Number(this._detailOccurrenceId) === detailOccurrenceId &&
+      Number(this._detailChildId) === detailChildId
+    ) {
+      this._closeDetail();
+      return;
+    }
+
     try {
       const response = await fetch(
         this._endpoint(`/api/v1/occurrences/${occurrenceId}?child_id=${childId}`),
@@ -137,8 +149,8 @@ class HallwardenCard extends HTMLElement {
       }
 
       this._detail = await response.json();
-      this._detailChildId = Number(childId);
-      this._detailOccurrenceId = Number(occurrenceId);
+      this._detailChildId = detailChildId;
+      this._detailOccurrenceId = detailOccurrenceId;
       await this._ensureHaDialog();
       this._error = "";
     } catch (error) {
@@ -163,11 +175,18 @@ class HallwardenCard extends HTMLElement {
         throw new Error(`Checklist update failed: ${response.status}`);
       }
 
-      await this._openDetail(occurrenceId, this._detailChildId);
+      await this._openDetail(occurrenceId, this._detailChildId, { refresh: true });
     } catch (error) {
       this._error = error instanceof Error ? error.message : "Unable to update checklist";
       this._render();
     }
+  }
+
+  _closeDetail() {
+    this._detail = null;
+    this._detailChildId = null;
+    this._detailOccurrenceId = null;
+    this._render();
   }
 
   async _completeOccurrence(occurrenceId, childId) {
@@ -509,11 +528,36 @@ class HallwardenCard extends HTMLElement {
         }
 
         .detail-list input[type="checkbox"] {
+          appearance: none;
+          -webkit-appearance: none;
+          display: grid;
+          place-content: center;
           width: calc(1.7rem * var(--ct-button-scale));
           height: calc(1.7rem * var(--ct-button-scale));
           min-width: calc(1.7rem * var(--ct-button-scale));
-          accent-color: var(--child-color, #2563eb);
+          border: 2px solid rgba(15, 23, 42, 0.24);
+          border-radius: 999px;
+          background: rgba(15, 23, 42, 0.08);
+          color: #ffffff;
           cursor: pointer;
+        }
+
+        .detail-list input[type="checkbox"]::before {
+          content: "✓";
+          font-size: calc(1rem * var(--ct-button-scale));
+          font-weight: 900;
+          line-height: 1;
+          transform: scale(0);
+          transition: transform 120ms ease-out;
+        }
+
+        .detail-list input[type="checkbox"]:checked {
+          border-color: #15803d;
+          background: #16a34a;
+        }
+
+        .detail-list input[type="checkbox"]:checked::before {
+          transform: scale(1);
         }
 
         ha-dialog {
@@ -585,18 +629,10 @@ class HallwardenCard extends HTMLElement {
       this._completeOccurrence(event.currentTarget.dataset.detailComplete, this._detailChildId);
     });
     this.shadowRoot.querySelector("[data-ha-dialog]")?.addEventListener("closed", () => {
-      this._detail = null;
-      this._detailChildId = null;
-      this._detailOccurrenceId = null;
-      this._render();
+      this._closeDetail();
     });
     this.shadowRoot.querySelectorAll("[data-close-detail]").forEach((element) => {
-      element.addEventListener("click", () => {
-        this._detail = null;
-        this._detailChildId = null;
-        this._detailOccurrenceId = null;
-        this._render();
-      });
+      element.addEventListener("click", () => this._closeDetail());
     });
     this._syncPopupPortal();
   }
@@ -778,12 +814,13 @@ class HallwardenCard extends HTMLElement {
     return this._visibleChildren().length === 0;
   }
 
-  _renderDetail() {
+  _renderDetail(options = {}) {
     const detail = this._detail;
+    const showTitle = options.showTitle !== false;
 
     return `
       <div class="detail" role="dialog" aria-label="${this._escapeAttribute(detail.title)}">
-        <h3>${this._escape(detail.title)}</h3>
+        ${showTitle ? `<h3>${this._escape(detail.title)}</h3>` : ""}
         <div class="detail-list">
           ${(detail.checklist || [])
             .map(
@@ -818,7 +855,7 @@ class HallwardenCard extends HTMLElement {
     if (Number(this._detailOccurrenceId) !== Number(chore.occurrence_id)) {
       return "";
     }
-    return this._renderDetail();
+    return this._renderDetail({ showTitle: false });
   }
 
   _renderPopupDetail() {
@@ -829,12 +866,13 @@ class HallwardenCard extends HTMLElement {
       return this._renderHaDialogDetail();
     }
     const detail = this._detail;
+    const popupTitle = this._detailTitle();
 
     return `
       <div class="popup-backdrop" data-close-detail>
-        <div class="popup-dialog" role="dialog" aria-label="${this._escapeAttribute(detail.title)}" data-popup-dialog>
+        <div class="popup-dialog" role="dialog" aria-label="${this._escapeAttribute(popupTitle)}" data-popup-dialog>
           <div class="popup-header">
-            <h3>${this._escape(detail.title)}</h3>
+            <h3>${this._escape(popupTitle)}</h3>
             <button type="button" data-close-detail aria-label="Close checklist">×</button>
           </div>
           <div class="detail-list">
@@ -867,13 +905,14 @@ class HallwardenCard extends HTMLElement {
 
   _renderHaDialogDetail() {
     const detail = this._detail;
+    const popupTitle = this._detailTitle();
 
     return `
       <ha-dialog
         open
         data-ha-dialog
-        heading="${this._escapeAttribute(detail.title)}"
-        aria-label="${this._escapeAttribute(detail.title)}"
+        heading="${this._escapeAttribute(popupTitle)}"
+        aria-label="${this._escapeAttribute(popupTitle)}"
       >
         <div class="ha-dialog-detail">
           <div class="detail-list">
@@ -905,6 +944,21 @@ class HallwardenCard extends HTMLElement {
         </div>
       </ha-dialog>
     `;
+  }
+
+  _detailTitle() {
+    const title = this._detail?.title || "Checklist";
+    const childName = this._detailChildName();
+    return childName ? `${title} - ${childName}` : title;
+  }
+
+  _detailChildName() {
+    const childId = Number(this._detailChildId);
+    if (!Number.isFinite(childId)) {
+      return "";
+    }
+    const child = (this._dashboard?.children || []).find((candidate) => Number(candidate.id) === childId);
+    return child?.name || "";
   }
 
   async _ensureHaDialog() {
@@ -952,12 +1006,7 @@ class HallwardenCard extends HTMLElement {
       event.stopPropagation();
     });
     this._popupPortal.querySelectorAll("[data-close-detail]").forEach((element) => {
-      element.addEventListener("click", () => {
-        this._detail = null;
-        this._detailChildId = null;
-        this._detailOccurrenceId = null;
-        this._render();
-      });
+      element.addEventListener("click", () => this._closeDetail());
     });
     this._popupPortal.querySelectorAll("[data-checklist]").forEach((input) => {
       input.addEventListener("change", () =>
@@ -1073,11 +1122,36 @@ class HallwardenCard extends HTMLElement {
         }
 
         .detail-list input[type="checkbox"] {
+          appearance: none;
+          -webkit-appearance: none;
+          display: grid;
+          place-content: center;
           width: calc(1.7rem * var(--ct-button-scale, 1));
           height: calc(1.7rem * var(--ct-button-scale, 1));
           min-width: calc(1.7rem * var(--ct-button-scale, 1));
-          accent-color: #2563eb;
+          border: 2px solid rgba(15, 23, 42, 0.24);
+          border-radius: 999px;
+          background: rgba(15, 23, 42, 0.08);
+          color: #ffffff;
           cursor: pointer;
+        }
+
+        .detail-list input[type="checkbox"]::before {
+          content: "✓";
+          font-size: calc(1rem * var(--ct-button-scale, 1));
+          font-weight: 900;
+          line-height: 1;
+          transform: scale(0);
+          transition: transform 120ms ease-out;
+        }
+
+        .detail-list input[type="checkbox"]:checked {
+          border-color: #15803d;
+          background: #16a34a;
+        }
+
+        .detail-list input[type="checkbox"]:checked::before {
+          transform: scale(1);
         }
 
         button {
