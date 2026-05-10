@@ -13,6 +13,7 @@ class HallwardenCard extends HTMLElement {
       show_empty: true,
       show_complete_button: true,
       use_icons: false,
+      scale: 1,
     };
   }
 
@@ -52,6 +53,7 @@ class HallwardenCard extends HTMLElement {
       use_icons: false,
       layout: "vertical",
       checklist_mode: "inline",
+      scale: 1,
       ...config,
       api_url: apiUrl,
     };
@@ -203,12 +205,42 @@ class HallwardenCard extends HTMLElement {
     return headers;
   }
 
+  _numberConfig(key, fallback) {
+    const value = Number(this._config[key]);
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  }
+
+  _scaleVariables() {
+    const globalScale = this._numberConfig("scale", 1);
+    return {
+      global: globalScale,
+      heading: this._numberConfig("heading_scale", globalScale),
+      child: this._numberConfig("child_scale", globalScale),
+      chore: this._numberConfig("chore_scale", globalScale),
+      button: this._numberConfig("button_scale", globalScale),
+      spacing: this._numberConfig("spacing_scale", globalScale),
+    };
+  }
+
   _render() {
     const preservedStyleNodes = this._preservedStyleNodes();
+    const scale = this._scaleVariables();
     this.shadowRoot.innerHTML = `
       <style>
         :host {
           display: block;
+          --ct-config-scale: ${scale.global};
+          --ct-config-heading-scale: ${scale.heading};
+          --ct-config-child-scale: ${scale.child};
+          --ct-config-chore-scale: ${scale.chore};
+          --ct-config-button-scale: ${scale.button};
+          --ct-config-spacing-scale: ${scale.spacing};
+          --ct-scale: var(--hallwarden-card-scale, var(--ct-config-scale));
+          --ct-heading-scale: var(--hallwarden-card-heading-scale, var(--ct-config-heading-scale));
+          --ct-child-scale: var(--hallwarden-card-child-scale, var(--ct-config-child-scale));
+          --ct-chore-scale: var(--hallwarden-card-chore-scale, var(--ct-config-chore-scale));
+          --ct-button-scale: var(--hallwarden-card-button-scale, var(--ct-config-button-scale));
+          --ct-spacing-scale: var(--hallwarden-card-spacing-scale, var(--ct-config-spacing-scale));
           --ct-text: var(--hallwarden-card-text-color, var(--chore-card-text-color, #172033));
           --ct-muted: var(--hallwarden-card-muted-text-color, var(--chore-card-muted-text-color, #475569));
           --ct-card-background:
@@ -223,15 +255,29 @@ class HallwardenCard extends HTMLElement {
           --ct-surface: var(--hallwarden-card-child-background, var(--chore-card-child-background, rgba(255, 255, 255, 0.76)));
           --ct-surface-strong: var(--hallwarden-card-chore-background, var(--chore-card-chore-background, rgba(255, 255, 255, 0.88)));
           --ct-popup-surface: var(--hallwarden-card-popup-background, var(--chore-card-popup-background, var(--ct-surface-strong)));
+          --ct-popup-overlay: var(--hallwarden-card-popup-overlay-background, rgba(219, 234, 254, 0.68));
           --ct-button-background: var(--hallwarden-card-button-background, var(--chore-card-button-background, var(--ct-surface-strong)));
           --ct-button-text: var(--hallwarden-card-button-text-color, var(--chore-card-button-text-color, var(--ct-text)));
           --ct-household-icon: var(--hallwarden-card-household-icon-color, var(--chore-card-household-icon-color, #b45309));
           --ct-radius: var(--hallwarden-card-radius, var(--chore-card-radius, 18px));
           --ct-gap: var(--hallwarden-card-gap, var(--chore-card-gap, 12px));
+          font-size: calc(1rem * var(--ct-scale));
           color: var(--ct-text);
         }
 
         ha-card {
+          --ct-config-scale: ${scale.global};
+          --ct-config-heading-scale: ${scale.heading};
+          --ct-config-child-scale: ${scale.child};
+          --ct-config-chore-scale: ${scale.chore};
+          --ct-config-button-scale: ${scale.button};
+          --ct-config-spacing-scale: ${scale.spacing};
+          --ct-scale: var(--hallwarden-card-scale, var(--ct-config-scale));
+          --ct-heading-scale: var(--hallwarden-card-heading-scale, var(--ct-config-heading-scale));
+          --ct-child-scale: var(--hallwarden-card-child-scale, var(--ct-config-child-scale));
+          --ct-chore-scale: var(--hallwarden-card-chore-scale, var(--ct-config-chore-scale));
+          --ct-button-scale: var(--hallwarden-card-button-scale, var(--ct-config-button-scale));
+          --ct-spacing-scale: var(--hallwarden-card-spacing-scale, var(--ct-config-spacing-scale));
           --ct-text: var(--hallwarden-card-text-color, var(--chore-card-text-color, #172033));
           --ct-muted: var(--hallwarden-card-muted-text-color, var(--chore-card-muted-text-color, #475569));
           --ct-card-background:
@@ -246,11 +292,13 @@ class HallwardenCard extends HTMLElement {
           --ct-surface: var(--hallwarden-card-child-background, var(--chore-card-child-background, rgba(255, 255, 255, 0.76)));
           --ct-surface-strong: var(--hallwarden-card-chore-background, var(--chore-card-chore-background, rgba(255, 255, 255, 0.88)));
           --ct-popup-surface: var(--hallwarden-card-popup-background, var(--chore-card-popup-background, var(--ct-surface-strong)));
+          --ct-popup-overlay: var(--hallwarden-card-popup-overlay-background, rgba(219, 234, 254, 0.68));
           --ct-button-background: var(--hallwarden-card-button-background, var(--chore-card-button-background, var(--ct-surface-strong)));
           --ct-button-text: var(--hallwarden-card-button-text-color, var(--chore-card-button-text-color, var(--ct-text)));
           --ct-household-icon: var(--hallwarden-card-household-icon-color, var(--chore-card-household-icon-color, #b45309));
           --ct-radius: var(--hallwarden-card-radius, var(--chore-card-radius, 18px));
           --ct-gap: var(--hallwarden-card-gap, var(--chore-card-gap, 12px));
+          font-size: calc(1rem * var(--ct-scale));
           color: var(--ct-text);
           overflow: hidden;
           background: var(--ct-card-background);
@@ -261,36 +309,37 @@ class HallwardenCard extends HTMLElement {
         }
 
         .card {
-          padding: 16px;
+          padding: calc(16px * var(--ct-spacing-scale));
         }
 
         header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 14px;
+          gap: calc(12px * var(--ct-spacing-scale));
+          margin-bottom: calc(14px * var(--ct-spacing-scale));
         }
 
         h2 {
           margin: 0;
-          font-size: 1.3rem;
+          font-size: calc(1.3rem * var(--ct-heading-scale));
           line-height: 1.1;
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
         .date {
-          font-size: 0.85rem;
+          font-size: calc(0.85rem * var(--ct-child-scale));
           color: var(--hallwarden-card-muted-text-color, var(--chore-card-muted-text-color, var(--ct-muted, #475569))) !important;
         }
 
         button {
           border: 0;
           border-radius: 999px;
-          padding: 0.45rem 0.75rem;
+          padding: calc(0.45rem * var(--ct-button-scale)) calc(0.75rem * var(--ct-button-scale));
           background: var(--ct-button-background);
           color: var(--hallwarden-card-button-text-color, var(--chore-card-button-text-color, var(--ct-button-text, var(--ct-text, #172033)))) !important;
           cursor: pointer;
+          font-size: calc(1rem * var(--ct-button-scale));
           font-weight: 800;
           box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.09);
         }
@@ -302,7 +351,7 @@ class HallwardenCard extends HTMLElement {
 
         .children {
           display: grid;
-          gap: var(--ct-gap);
+          gap: calc(var(--ct-gap) * var(--ct-spacing-scale));
         }
 
         .children.layout-vertical {
@@ -320,7 +369,7 @@ class HallwardenCard extends HTMLElement {
         .children.layout-horizontal {
           display: flex;
           overflow-x: auto;
-          padding-bottom: 2px;
+          padding-bottom: calc(2px * var(--ct-spacing-scale));
         }
 
         .children.layout-horizontal .child {
@@ -330,7 +379,7 @@ class HallwardenCard extends HTMLElement {
         .child {
           border-left: 8px solid var(--child-color, #2563eb);
           border-radius: var(--ct-radius);
-          padding: 12px;
+          padding: calc(12px * var(--ct-spacing-scale));
           background: var(--ct-surface);
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
         }
@@ -339,29 +388,29 @@ class HallwardenCard extends HTMLElement {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 10px;
-          margin-bottom: 8px;
+          gap: calc(10px * var(--ct-spacing-scale));
+          margin-bottom: calc(8px * var(--ct-spacing-scale));
         }
 
         .child-name {
-          font-size: 1.1rem;
+          font-size: calc(1.1rem * var(--ct-child-scale));
           font-weight: 900;
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
         .counts {
-          font-size: 0.8rem;
+          font-size: calc(0.8rem * var(--ct-child-scale));
           color: var(--hallwarden-card-muted-text-color, var(--chore-card-muted-text-color, var(--ct-muted, #475569))) !important;
         }
 
         .chores {
           display: grid;
-          gap: 7px;
+          gap: calc(7px * var(--ct-spacing-scale));
         }
 
         .chore {
           border-radius: 14px;
-          padding: 8px 10px;
+          padding: calc(8px * var(--ct-spacing-scale)) calc(10px * var(--ct-spacing-scale));
           background: var(--ct-surface-strong);
         }
 
@@ -369,12 +418,13 @@ class HallwardenCard extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
+          gap: calc(8px * var(--ct-spacing-scale));
         }
 
         .title {
           min-width: 0;
           font-weight: 900;
+          font-size: calc(1rem * var(--ct-chore-scale));
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
@@ -385,37 +435,37 @@ class HallwardenCard extends HTMLElement {
         .actions {
           display: flex;
           flex: none;
-          gap: 6px;
+          gap: calc(6px * var(--ct-spacing-scale));
         }
 
         .detail {
-          margin-top: 14px;
+          margin-top: calc(14px * var(--ct-spacing-scale));
           border-radius: var(--ct-radius);
-          padding: 14px;
+          padding: calc(14px * var(--ct-spacing-scale));
           background: var(--ct-surface-strong);
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
         }
 
         .chore .detail {
-          margin-top: 8px;
+          margin-top: calc(8px * var(--ct-spacing-scale));
         }
 
         .detail h3 {
-          margin: 0 0 10px;
-          font-size: 1.05rem;
+          margin: 0 0 calc(10px * var(--ct-spacing-scale));
+          font-size: calc(1.05rem * var(--ct-heading-scale));
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
         .detail-list {
           display: grid;
-          gap: 8px;
-          margin-bottom: 12px;
+          gap: calc(8px * var(--ct-spacing-scale));
+          margin-bottom: calc(12px * var(--ct-spacing-scale));
         }
 
         .detail-list label {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: calc(8px * var(--ct-spacing-scale));
           font-weight: 700;
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
@@ -427,12 +477,12 @@ class HallwardenCard extends HTMLElement {
         .ha-dialog-actions {
           display: flex;
           justify-content: flex-end;
-          gap: 8px;
+          gap: calc(8px * var(--ct-spacing-scale));
         }
 
         .empty,
         .error {
-          padding: 18px;
+          padding: calc(18px * var(--ct-spacing-scale));
           border-radius: var(--ct-radius);
           background: var(--ct-surface);
           text-align: center;
@@ -870,10 +920,21 @@ class HallwardenCard extends HTMLElement {
     [
       "--ct-text",
       "--ct-muted",
+      "--ct-card-background",
+      "--ct-surface",
+      "--ct-surface-strong",
       "--ct-popup-surface",
+      "--ct-popup-overlay",
       "--ct-button-background",
       "--ct-button-text",
       "--ct-radius",
+      "--ct-gap",
+      "--ct-scale",
+      "--ct-heading-scale",
+      "--ct-child-scale",
+      "--ct-chore-scale",
+      "--ct-button-scale",
+      "--ct-spacing-scale",
     ].forEach((name) => {
       const value = sourceStyles.getPropertyValue(name).trim();
       if (value) {
@@ -891,10 +952,10 @@ class HallwardenCard extends HTMLElement {
           z-index: 2147483647;
           display: grid;
           place-items: center;
-          padding: 24px;
+          padding: calc(24px * var(--ct-spacing-scale, 1));
           color: var(--ct-text, #172033);
-          background: rgba(15, 23, 42, 0.46);
-          backdrop-filter: blur(4px);
+          background: var(--ct-popup-overlay, rgba(219, 234, 254, 0.68));
+          backdrop-filter: blur(8px);
         }
 
         .popup-dialog {
@@ -902,47 +963,58 @@ class HallwardenCard extends HTMLElement {
           max-height: min(80vh, 620px);
           overflow: auto;
           border-radius: var(--ct-radius, 18px);
-          padding: 16px;
+          padding: calc(16px * var(--ct-spacing-scale, 1));
           color: var(--ct-text, #172033);
-          background: var(--ct-popup-surface, rgba(255, 255, 255, 0.96));
+          background:
+            var(--ct-popup-surface,
+              var(--ct-card-background, rgba(255, 255, 255, 0.96)));
           box-shadow: 0 24px 80px rgba(15, 23, 42, 0.35);
+          font-size: calc(1rem * var(--ct-scale, 1));
         }
 
         .popup-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 10px;
+          gap: calc(12px * var(--ct-spacing-scale, 1));
+          margin-bottom: calc(10px * var(--ct-spacing-scale, 1));
+          border-radius: var(--ct-radius, 18px);
+          padding: calc(10px * var(--ct-spacing-scale, 1)) calc(12px * var(--ct-spacing-scale, 1));
+          background: var(--ct-surface, rgba(255, 255, 255, 0.76));
         }
 
         .popup-header h3 {
           margin: 0;
-          font-size: 1.08rem;
+          font-size: calc(1.08rem * var(--ct-heading-scale, 1));
           color: var(--ct-text, #172033);
         }
 
         .detail-list {
           display: grid;
-          gap: 8px;
-          margin-bottom: 12px;
+          gap: calc(8px * var(--ct-spacing-scale, 1));
+          margin-bottom: calc(12px * var(--ct-spacing-scale, 1));
         }
 
         .detail-list label {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: calc(8px * var(--ct-spacing-scale, 1));
+          border-radius: 14px;
+          padding: calc(8px * var(--ct-spacing-scale, 1)) calc(10px * var(--ct-spacing-scale, 1));
+          background: var(--ct-surface-strong, rgba(255, 255, 255, 0.88));
           font-weight: 700;
+          font-size: calc(1rem * var(--ct-chore-scale, 1));
           color: var(--ct-text, #172033);
         }
 
         button {
           border: 0;
           border-radius: 999px;
-          padding: 0.45rem 0.75rem;
+          padding: calc(0.45rem * var(--ct-button-scale, 1)) calc(0.75rem * var(--ct-button-scale, 1));
           background: var(--ct-button-background, rgba(255, 255, 255, 0.88));
           color: var(--ct-button-text, var(--ct-text, #172033));
           cursor: pointer;
+          font-size: calc(1rem * var(--ct-button-scale, 1));
           font-weight: 800;
           box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.09);
         }
@@ -985,6 +1057,7 @@ class HallwardenCardEditor extends HTMLElement {
       show_empty: true,
       show_complete_button: true,
       use_icons: false,
+      scale: 1,
       ...config,
     };
     this._render();
@@ -1028,6 +1101,12 @@ class HallwardenCardEditor extends HTMLElement {
         ${this._input("child_id", "Child ID", "number")}
         ${this._input("show_quantity", "Visible chore limit", "number")}
         ${this._input("fixed_card_size", "Fixed card size", "number")}
+        ${this._input("scale", "Overall scale", "number", "0.05")}
+        ${this._input("heading_scale", "Heading scale", "number", "0.05")}
+        ${this._input("child_scale", "Child text scale", "number", "0.05")}
+        ${this._input("chore_scale", "Chore text scale", "number", "0.05")}
+        ${this._input("button_scale", "Button scale", "number", "0.05")}
+        ${this._input("spacing_scale", "Spacing scale", "number", "0.05")}
         ${this._select("layout", "Layout", ["vertical", "horizontal", "grid", "columns"])}
         ${this._select("checklist_mode", "Checklist mode", ["inline", "popup"])}
         ${this._checkbox("show_empty", "Show empty card")}
@@ -1042,9 +1121,10 @@ class HallwardenCardEditor extends HTMLElement {
     });
   }
 
-  _input(key, label, type = "text") {
+  _input(key, label, type = "text", step = "") {
     const value = this._config[key] ?? "";
-    return `<label>${label}<input name="${key}" data-config-key="${key}" type="${type}" value="${this._escapeAttribute(value)}"></label>`;
+    const stepAttribute = step ? ` step="${this._escapeAttribute(step)}"` : "";
+    return `<label>${label}<input name="${key}" data-config-key="${key}" type="${type}"${stepAttribute} value="${this._escapeAttribute(value)}"></label>`;
   }
 
   _select(key, label, options) {
@@ -1066,7 +1146,19 @@ class HallwardenCardEditor extends HTMLElement {
   _updateFromElement(element) {
     const key = element.dataset.configKey;
     let value = element.type === "checkbox" ? element.checked : element.value;
-    if (["child_id", "show_quantity", "fixed_card_size"].includes(key)) {
+    if (
+      [
+        "child_id",
+        "show_quantity",
+        "fixed_card_size",
+        "scale",
+        "heading_scale",
+        "child_scale",
+        "chore_scale",
+        "button_scale",
+        "spacing_scale",
+      ].includes(key)
+    ) {
       value = value === "" ? undefined : Number(value);
     }
 

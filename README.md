@@ -67,6 +67,11 @@ show_quantity: 5
 # Use compact icon action buttons instead of text buttons.
 use_icons: true
 
+# Scale the full card or specific areas. Omit targeted scales to inherit scale.
+scale: 1.2
+button_scale: 1.35
+spacing_scale: 1.1
+
 # Return a stable Home Assistant masonry card size.
 fixed_card_size: 3
 
@@ -88,17 +93,26 @@ When `child_id` is set, the card renders that child as the top-level Home Assist
 
 The card ships with readable defaults, but Home Assistant themes or `card_mod` can override these CSS variables. The old `--chore-card-*` variables still work as a transition fallback, but new configs should use `--hallwarden-card-*`.
 
+Sizing can be controlled from the visual editor or YAML with `scale`, `heading_scale`, `child_scale`, `chore_scale`, `button_scale`, and `spacing_scale`. Advanced users can also override the equivalent CSS variables directly.
+
 ```yaml
 card_mod:
   style: |
     :host,
     ha-card {
+      --hallwarden-card-scale: 1.15;
+      --hallwarden-card-heading-scale: 1.1;
+      --hallwarden-card-child-scale: 1.15;
+      --hallwarden-card-chore-scale: 1.2;
+      --hallwarden-card-button-scale: 1.25;
+      --hallwarden-card-spacing-scale: 1.1;
       --hallwarden-card-text-color: #111827;
       --hallwarden-card-muted-text-color: #334155;
       --hallwarden-card-background: linear-gradient(135deg, #f8fafc, #dbeafe);
       --hallwarden-card-child-background: rgba(255, 255, 255, 0.7);
       --hallwarden-card-chore-background: rgba(255, 255, 255, 0.9);
       --hallwarden-card-popup-background: rgba(255, 255, 255, 0.96);
+      --hallwarden-card-popup-overlay-background: rgba(219, 234, 254, 0.68);
       --hallwarden-card-button-background: rgba(15, 23, 42, 0.9);
       --hallwarden-card-button-text-color: #f8fafc;
       --hallwarden-card-household-icon-color: #f59e0b;
