@@ -499,11 +499,42 @@ class HallwardenCard extends HTMLElement {
           display: flex;
           align-items: center;
           gap: calc(8px * var(--ct-spacing-scale));
+          min-height: calc(40px * var(--ct-spacing-scale));
+          border-radius: 14px;
+          padding: calc(8px * var(--ct-spacing-scale)) calc(10px * var(--ct-spacing-scale));
+          background: var(--ct-surface-strong);
           font-weight: 700;
+          font-size: calc(1rem * var(--ct-chore-scale));
+          color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
+        }
+
+        .detail-list input[type="checkbox"] {
+          width: calc(1.7rem * var(--ct-button-scale));
+          height: calc(1.7rem * var(--ct-button-scale));
+          min-width: calc(1.7rem * var(--ct-button-scale));
+          accent-color: var(--child-color, #2563eb);
+          cursor: pointer;
+        }
+
+        ha-dialog {
+          --mdc-dialog-scrim-color: var(--ct-popup-overlay);
+          --mdc-dialog-container-color: var(--ct-popup-surface);
+          --mdc-theme-surface: var(--ct-popup-surface);
+          color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
+        }
+
+        ha-dialog::part(content),
+        ha-dialog::part(surface) {
+          background: var(--ct-popup-surface);
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
         .ha-dialog-detail {
+          border-radius: var(--ct-radius);
+          padding: calc(16px * var(--ct-spacing-scale));
+          background: var(--ct-popup-surface);
+          box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+          font-size: calc(1rem * var(--ct-scale));
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
@@ -1032,12 +1063,21 @@ class HallwardenCard extends HTMLElement {
           display: flex;
           align-items: center;
           gap: calc(8px * var(--ct-spacing-scale, 1));
+          min-height: calc(40px * var(--ct-spacing-scale, 1));
           border-radius: 14px;
           padding: calc(8px * var(--ct-spacing-scale, 1)) calc(10px * var(--ct-spacing-scale, 1));
           background: var(--ct-surface-strong, rgba(255, 255, 255, 0.88));
           font-weight: 700;
           font-size: calc(1rem * var(--ct-chore-scale, 1));
           color: var(--ct-text, #172033);
+        }
+
+        .detail-list input[type="checkbox"] {
+          width: calc(1.7rem * var(--ct-button-scale, 1));
+          height: calc(1.7rem * var(--ct-button-scale, 1));
+          min-width: calc(1.7rem * var(--ct-button-scale, 1));
+          accent-color: #2563eb;
+          cursor: pointer;
         }
 
         button {
