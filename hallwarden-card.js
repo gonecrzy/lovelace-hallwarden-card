@@ -281,6 +281,22 @@ class HallwardenCard extends HTMLElement {
           --ct-household-icon: var(--hallwarden-card-household-icon-color, var(--chore-card-household-icon-color, #b45309));
           --ct-radius: var(--hallwarden-card-radius, var(--chore-card-radius, 18px));
           --ct-gap: var(--hallwarden-card-gap, var(--chore-card-gap, 12px));
+          --ct-card-backdrop-filter: var(--hallwarden-card-backdrop-filter, none);
+          --ct-card-border: var(--hallwarden-card-border, 0);
+          --ct-card-box-shadow: var(--hallwarden-card-box-shadow, var(--ha-card-box-shadow, 0 10px 24px rgba(15, 23, 42, 0.08)));
+          --ct-child-accent-width: var(--hallwarden-card-child-accent-width, 8px);
+          --ct-child-border: var(--hallwarden-card-child-border, 0);
+          --ct-child-box-shadow: var(--hallwarden-card-child-box-shadow, 0 10px 24px rgba(15, 23, 42, 0.08));
+          --ct-chore-radius: var(--hallwarden-card-chore-radius, 14px);
+          --ct-chore-box-shadow: var(--hallwarden-card-chore-box-shadow, none);
+          --ct-detail-box-shadow: var(--hallwarden-card-detail-box-shadow, 0 10px 24px rgba(15, 23, 42, 0.1));
+          --ct-button-box-shadow: var(--hallwarden-card-button-box-shadow, inset 0 0 0 1px rgba(15, 23, 42, 0.09));
+          --ct-checklist-unchecked-background: var(--hallwarden-card-checklist-unchecked-background, rgba(15, 23, 42, 0.08));
+          --ct-checklist-unchecked-border: var(--hallwarden-card-checklist-unchecked-border, 2px solid rgba(15, 23, 42, 0.24));
+          --ct-checklist-checked-background: var(--hallwarden-card-checklist-checked-background, #16a34a);
+          --ct-checklist-checked-border: var(--hallwarden-card-checklist-checked-border, 2px solid #15803d);
+          --ct-checklist-check-color: var(--hallwarden-card-checklist-check-color, #ffffff);
+          --ct-popup-box-shadow: var(--hallwarden-card-popup-box-shadow, 0 24px 80px rgba(15, 23, 42, 0.35));
           font-size: calc(1rem * var(--ct-scale));
           color: var(--ct-text);
         }
@@ -319,14 +335,34 @@ class HallwardenCard extends HTMLElement {
           --ct-household-icon: var(--hallwarden-card-household-icon-color, var(--chore-card-household-icon-color, #b45309));
           --ct-radius: var(--hallwarden-card-radius, var(--chore-card-radius, 18px));
           --ct-gap: var(--hallwarden-card-gap, var(--chore-card-gap, 12px));
+          --ct-card-backdrop-filter: var(--hallwarden-card-backdrop-filter, none);
+          --ct-card-border: var(--hallwarden-card-border, 0);
+          --ct-card-box-shadow: var(--hallwarden-card-box-shadow, var(--ha-card-box-shadow, 0 10px 24px rgba(15, 23, 42, 0.08)));
+          --ct-child-accent-width: var(--hallwarden-card-child-accent-width, 8px);
+          --ct-child-border: var(--hallwarden-card-child-border, 0);
+          --ct-child-box-shadow: var(--hallwarden-card-child-box-shadow, 0 10px 24px rgba(15, 23, 42, 0.08));
+          --ct-chore-radius: var(--hallwarden-card-chore-radius, 14px);
+          --ct-chore-box-shadow: var(--hallwarden-card-chore-box-shadow, none);
+          --ct-detail-box-shadow: var(--hallwarden-card-detail-box-shadow, 0 10px 24px rgba(15, 23, 42, 0.1));
+          --ct-button-box-shadow: var(--hallwarden-card-button-box-shadow, inset 0 0 0 1px rgba(15, 23, 42, 0.09));
+          --ct-checklist-unchecked-background: var(--hallwarden-card-checklist-unchecked-background, rgba(15, 23, 42, 0.08));
+          --ct-checklist-unchecked-border: var(--hallwarden-card-checklist-unchecked-border, 2px solid rgba(15, 23, 42, 0.24));
+          --ct-checklist-checked-background: var(--hallwarden-card-checklist-checked-background, #16a34a);
+          --ct-checklist-checked-border: var(--hallwarden-card-checklist-checked-border, 2px solid #15803d);
+          --ct-checklist-check-color: var(--hallwarden-card-checklist-check-color, #ffffff);
+          --ct-popup-box-shadow: var(--hallwarden-card-popup-box-shadow, 0 24px 80px rgba(15, 23, 42, 0.35));
           font-size: calc(1rem * var(--ct-scale));
           color: var(--ct-text);
           overflow: hidden;
           background: var(--ct-card-background);
+          backdrop-filter: var(--ct-card-backdrop-filter);
+          -webkit-backdrop-filter: var(--ct-card-backdrop-filter);
+          border: var(--ct-card-border);
+          box-shadow: var(--ct-card-box-shadow);
         }
 
         ha-card.single-child-card {
-          border-left: 8px solid var(--child-color, #2563eb);
+          border-left: var(--ct-child-accent-width) solid var(--child-color, #2563eb);
           background:
             linear-gradient(135deg, var(--child-card-tint, var(--ct-child-card-tint)), rgba(255, 253, 250, 0.9)),
             var(--ct-card-background);
@@ -365,7 +401,7 @@ class HallwardenCard extends HTMLElement {
           cursor: pointer;
           font-size: calc(1rem * var(--ct-button-scale));
           font-weight: 800;
-          box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.09);
+          box-shadow: var(--ct-button-box-shadow);
         }
 
         button:disabled {
@@ -402,13 +438,14 @@ class HallwardenCard extends HTMLElement {
 
         .child {
           --child-card-tint: var(--ct-child-card-tint);
-          border-left: 8px solid var(--child-color, #2563eb);
+          border: var(--ct-child-border);
+          border-left: var(--ct-child-accent-width) solid var(--child-color, #2563eb);
           border-radius: var(--ct-radius);
           padding: calc(12px * var(--ct-spacing-scale));
           background:
             linear-gradient(135deg, var(--child-card-tint), rgba(255, 253, 250, 0.9)),
             var(--ct-surface);
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+          box-shadow: var(--ct-child-box-shadow);
         }
 
         .child[data-child-color="blue"],
@@ -461,9 +498,10 @@ class HallwardenCard extends HTMLElement {
         }
 
         .chore {
-          border-radius: 14px;
+          border-radius: var(--ct-chore-radius);
           padding: calc(8px * var(--ct-spacing-scale)) calc(10px * var(--ct-spacing-scale));
           background: var(--ct-surface-strong);
+          box-shadow: var(--ct-chore-box-shadow);
         }
 
         .chore-row {
@@ -495,7 +533,7 @@ class HallwardenCard extends HTMLElement {
           border-radius: var(--ct-radius);
           padding: calc(14px * var(--ct-spacing-scale));
           background: var(--ct-surface-strong);
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+          box-shadow: var(--ct-detail-box-shadow);
         }
 
         .chore .detail {
@@ -535,10 +573,10 @@ class HallwardenCard extends HTMLElement {
           width: calc(1.7rem * var(--ct-button-scale));
           height: calc(1.7rem * var(--ct-button-scale));
           min-width: calc(1.7rem * var(--ct-button-scale));
-          border: 2px solid rgba(15, 23, 42, 0.24);
+          border: var(--ct-checklist-unchecked-border);
           border-radius: 999px;
-          background: rgba(15, 23, 42, 0.08);
-          color: #ffffff;
+          background: var(--ct-checklist-unchecked-background);
+          color: var(--ct-checklist-check-color);
           cursor: pointer;
         }
 
@@ -552,8 +590,8 @@ class HallwardenCard extends HTMLElement {
         }
 
         .detail-list input[type="checkbox"]:checked {
-          border-color: #15803d;
-          background: #16a34a;
+          border: var(--ct-checklist-checked-border);
+          background: var(--ct-checklist-checked-background);
         }
 
         .detail-list input[type="checkbox"]:checked::before {
@@ -1038,10 +1076,17 @@ class HallwardenCard extends HTMLElement {
       "--ct-surface-strong",
       "--ct-popup-surface",
       "--ct-popup-overlay",
+      "--ct-popup-box-shadow",
       "--ct-button-background",
       "--ct-button-text",
+      "--ct-button-box-shadow",
       "--ct-radius",
       "--ct-gap",
+      "--ct-checklist-unchecked-background",
+      "--ct-checklist-unchecked-border",
+      "--ct-checklist-checked-background",
+      "--ct-checklist-checked-border",
+      "--ct-checklist-check-color",
       "--ct-scale",
       "--ct-heading-scale",
       "--ct-child-scale",
@@ -1081,7 +1126,7 @@ class HallwardenCard extends HTMLElement {
           background:
             var(--ct-popup-surface,
               var(--ct-card-background, rgba(255, 255, 255, 0.96)));
-          box-shadow: 0 24px 80px rgba(15, 23, 42, 0.35);
+          box-shadow: var(--ct-popup-box-shadow, 0 24px 80px rgba(15, 23, 42, 0.35));
           font-size: calc(1rem * var(--ct-scale, 1));
         }
 
@@ -1129,10 +1174,10 @@ class HallwardenCard extends HTMLElement {
           width: calc(1.7rem * var(--ct-button-scale, 1));
           height: calc(1.7rem * var(--ct-button-scale, 1));
           min-width: calc(1.7rem * var(--ct-button-scale, 1));
-          border: 2px solid rgba(15, 23, 42, 0.24);
+          border: var(--ct-checklist-unchecked-border, 2px solid rgba(15, 23, 42, 0.24));
           border-radius: 999px;
-          background: rgba(15, 23, 42, 0.08);
-          color: #ffffff;
+          background: var(--ct-checklist-unchecked-background, rgba(15, 23, 42, 0.08));
+          color: var(--ct-checklist-check-color, #ffffff);
           cursor: pointer;
         }
 
@@ -1146,8 +1191,8 @@ class HallwardenCard extends HTMLElement {
         }
 
         .detail-list input[type="checkbox"]:checked {
-          border-color: #15803d;
-          background: #16a34a;
+          border: var(--ct-checklist-checked-border, 2px solid #15803d);
+          background: var(--ct-checklist-checked-background, #16a34a);
         }
 
         .detail-list input[type="checkbox"]:checked::before {
@@ -1163,7 +1208,7 @@ class HallwardenCard extends HTMLElement {
           cursor: pointer;
           font-size: calc(1rem * var(--ct-button-scale, 1));
           font-weight: 800;
-          box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.09);
+          box-shadow: var(--ct-button-box-shadow, inset 0 0 0 1px rgba(15, 23, 42, 0.09));
         }
 
         button:disabled {

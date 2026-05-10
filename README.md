@@ -121,3 +121,34 @@ card_mod:
       --hallwarden-card-gap: 12px;
     }
 ```
+
+Glass-style cards should use the exposed variables rather than shadow-root selectors:
+
+```yaml
+card_mod:
+  style: |
+    hallwarden-card {
+      --hallwarden-card-text-color: #f8fafc;
+      --hallwarden-card-muted-text-color: rgba(226, 232, 240, 0.82);
+      --hallwarden-card-background: rgba(15, 23, 42, 0.35);
+      --hallwarden-card-backdrop-filter: blur(18px) saturate(1.25);
+      --hallwarden-card-border: 1px solid rgba(255, 255, 255, 0.22);
+      --hallwarden-card-box-shadow: 0 18px 50px rgba(2, 6, 23, 0.28);
+      --hallwarden-card-child-background: rgba(255, 255, 255, 0.12);
+      --hallwarden-card-child-tint: rgba(255, 255, 255, 0.08);
+      --hallwarden-card-child-box-shadow: 0 8px 20px rgba(2, 6, 23, 0.18);
+      --hallwarden-card-chore-background: rgba(255, 255, 255, 0.16);
+      --hallwarden-card-chore-radius: 16px;
+      --hallwarden-card-button-background: rgba(255, 255, 255, 0.18);
+      --hallwarden-card-button-text-color: #f8fafc;
+      --hallwarden-card-checklist-unchecked-background: rgba(255, 255, 255, 0.16);
+      --hallwarden-card-checklist-unchecked-border: 2px solid rgba(255, 255, 255, 0.42);
+      --hallwarden-card-checklist-checked-background: #16a34a;
+      --hallwarden-card-checklist-checked-border: 2px solid #86efac;
+      --hallwarden-card-checklist-check-color: #ffffff;
+    }
+```
+
+Additional advanced variables are available for tighter theming:
+
+`--hallwarden-card-child-accent-width`, `--hallwarden-card-child-border`, `--hallwarden-card-chore-box-shadow`, `--hallwarden-card-detail-box-shadow`, `--hallwarden-card-button-box-shadow`, and `--hallwarden-card-popup-box-shadow`.
