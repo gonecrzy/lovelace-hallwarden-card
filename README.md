@@ -127,7 +127,8 @@ Glass-style cards should use the exposed variables rather than shadow-root selec
 ```yaml
 card_mod:
   style: |
-    hallwarden-card {
+    :host,
+    ha-card {
       --hallwarden-card-text-color: #f8fafc;
       --hallwarden-card-muted-text-color: rgba(226, 232, 240, 0.82);
       --hallwarden-card-background: rgba(15, 23, 42, 0.35);
