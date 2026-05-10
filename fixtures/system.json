@@ -1,0 +1,14 @@
+{
+  "app_name": "Hallwarden",
+  "app_version": "0.1.0",
+  "api_version": 1,
+  "instance_id": "hallwarden-household-1",
+  "date": "2026-05-10",
+  "timezone": "UTC",
+  "features": {
+    "dashboard": true,
+    "ha_summary": true,
+    "checklist_actions": true,
+    "occurrence_completion": true
+  }
+}

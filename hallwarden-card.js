@@ -3,6 +3,23 @@ const HALLWARDEN_CARD_VERSION = "2026.05.10-hallwarden-v1";
 class HallwardenCard extends HTMLElement {
   static version = HALLWARDEN_CARD_VERSION;
 
+  static getStubConfig() {
+    return {
+      title: "Chores",
+      api_url: "http://hallwarden.local:3000",
+      api_token: "",
+      layout: "vertical",
+      checklist_mode: "inline",
+      show_empty: true,
+      show_complete_button: true,
+      use_icons: false,
+    };
+  }
+
+  static getConfigElement() {
+    return document.createElement("hallwarden-card-editor");
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -952,6 +969,132 @@ class HallwardenCard extends HTMLElement {
   }
 }
 
+class HallwardenCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._config = {};
+  }
+
+  setConfig(config) {
+    this._config = {
+      type: "custom:hallwarden-card",
+      title: "Chores",
+      layout: "vertical",
+      checklist_mode: "inline",
+      show_empty: true,
+      show_complete_button: true,
+      use_icons: false,
+      ...config,
+    };
+    this._render();
+  }
+
+  _render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        .editor {
+          display: grid;
+          gap: 12px;
+        }
+
+        label {
+          display: grid;
+          gap: 4px;
+          font-weight: 600;
+        }
+
+        input,
+        select {
+          box-sizing: border-box;
+          width: 100%;
+          padding: 8px;
+        }
+
+        .row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .row input {
+          width: auto;
+        }
+      </style>
+      <div class="editor">
+        ${this._input("title", "Title")}
+        ${this._input("api_url", "API URL")}
+        ${this._input("api_token", "API token", "password")}
+        ${this._input("child_id", "Child ID", "number")}
+        ${this._input("show_quantity", "Visible chore limit", "number")}
+        ${this._input("fixed_card_size", "Fixed card size", "number")}
+        ${this._select("layout", "Layout", ["vertical", "horizontal", "grid", "columns"])}
+        ${this._select("checklist_mode", "Checklist mode", ["inline", "popup"])}
+        ${this._checkbox("show_empty", "Show empty card")}
+        ${this._checkbox("show_complete_button", "Show complete buttons")}
+        ${this._checkbox("use_icons", "Use icon buttons")}
+      </div>
+    `;
+
+    this.shadowRoot.querySelectorAll("[data-config-key]").forEach((element) => {
+      element.addEventListener("input", () => this._updateFromElement(element));
+      element.addEventListener("change", () => this._updateFromElement(element));
+    });
+  }
+
+  _input(key, label, type = "text") {
+    const value = this._config[key] ?? "";
+    return `<label>${label}<input name="${key}" data-config-key="${key}" type="${type}" value="${this._escapeAttribute(value)}"></label>`;
+  }
+
+  _select(key, label, options) {
+    const current = this._config[key] ?? "";
+    return `<label>${label}<select name="${key}" data-config-key="${key}">${options
+      .map(
+        (option) =>
+          `<option value="${option}" ${current === option ? "selected" : ""}>${option}</option>`,
+      )
+      .join("")}</select></label>`;
+  }
+
+  _checkbox(key, label) {
+    return `<label class="row"><input name="${key}" data-config-key="${key}" type="checkbox" ${
+      this._config[key] !== false ? "checked" : ""
+    }>${label}</label>`;
+  }
+
+  _updateFromElement(element) {
+    const key = element.dataset.configKey;
+    let value = element.type === "checkbox" ? element.checked : element.value;
+    if (["child_id", "show_quantity", "fixed_card_size"].includes(key)) {
+      value = value === "" ? undefined : Number(value);
+    }
+
+    const nextConfig = { ...this._config };
+    if (value === undefined || value === "") {
+      delete nextConfig[key];
+    } else {
+      nextConfig[key] = value;
+    }
+    this._config = nextConfig;
+
+    const event = new Event("config-changed", { bubbles: true, composed: true });
+    event.detail = { config: nextConfig };
+    this.dispatchEvent(event);
+  }
+
+  _escapeAttribute(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;")
+      .replace(/`/g, "&#096;");
+  }
+}
+
+customElements.define("hallwarden-card-editor", HallwardenCardEditor);
 customElements.define("hallwarden-card", HallwardenCard);
 
 window.customCards = window.customCards || [];

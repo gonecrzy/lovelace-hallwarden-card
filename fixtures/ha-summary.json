@@ -1,0 +1,23 @@
+{
+  "api_version": 1,
+  "instance_id": "hallwarden-household-1",
+  "date": "2026-05-10",
+  "timezone": "UTC",
+  "household": {
+    "entity_key": "household",
+    "reminder_pending_count": 1,
+    "overdue_count": 0
+  },
+  "children": [
+    {
+      "id": 1,
+      "entity_key": "child_1",
+      "name": "Alex",
+      "color": "#2563eb",
+      "reminder_pending_count": 2,
+      "overdue_count": 1,
+      "required_pending_count": 2,
+      "next_pending_titles": ["Dishes", "Trash"]
+    }
+  ]
+}

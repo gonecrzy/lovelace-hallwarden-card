@@ -35,6 +35,14 @@ refresh_interval: 30
 
 Use `HALLWARDEN_API_TOKEN` on the Hallwarden server to set the bearer token expected by the API.
 
+## Home Assistant UI Editor
+
+Hallwarden registers `custom:hallwarden-card` for the Home Assistant card picker and provides a basic graphical editor. YAML remains supported for advanced options and for copying known-good configs between dashboards.
+
+## API Compatibility
+
+The card uses `/api/v1/dashboard` for display and occurrence endpoints for actions. The HA integration uses `/api/v1/system` and `/api/v1/ha/summary` for entity setup and reminders. Keep the Hallwarden server and HACS assets from compatible releases.
+
 ## Display Options
 
 All options are optional unless noted:
