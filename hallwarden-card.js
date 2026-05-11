@@ -11,6 +11,7 @@ class HallwardenCard extends HTMLElement {
       layout: "vertical",
       checklist_mode: "inline",
       show_empty: true,
+      show_clock: true,
       show_complete_button: true,
       use_icons: false,
       scale: 1,
@@ -59,6 +60,7 @@ class HallwardenCard extends HTMLElement {
       layout: "vertical",
       checklist_mode: "inline",
       scale: 1,
+      show_clock: true,
       ...config,
       api_url: apiUrl,
     };
@@ -113,7 +115,7 @@ class HallwardenCard extends HTMLElement {
 
   async _refresh() {
     try {
-      const response = await fetch(this._endpoint("/api/v1/dashboard"), {
+      const response = await fetch(this._endpoint(this._dashboardPath()), {
         headers: this._headers(),
       });
 
@@ -219,6 +221,22 @@ class HallwardenCard extends HTMLElement {
 
   _endpoint(path) {
     return `${this._config.api_url.replace(/\/$/, "")}${path}`;
+  }
+
+  _dashboardPath() {
+    const timezone = this._clientTimezone();
+    if (!timezone) {
+      return "/api/v1/dashboard";
+    }
+    return `/api/v1/dashboard?timezone=${encodeURIComponent(timezone)}`;
+  }
+
+  _clientTimezone() {
+    return (
+      this._hass?.config?.time_zone ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone ||
+      ""
+    );
   }
 
   _headers(extra = {}) {
@@ -697,7 +715,7 @@ class HallwardenCard extends HTMLElement {
           <header>
             <div>
               <h2>${this._escape(this._config.title || "Chores")}</h2>
-              <div class="date">${this._escape(this._clockLabel())}</div>
+              ${this._renderClockMeta()}
             </div>
             <button type="button" data-refresh>Refresh</button>
           </header>
@@ -716,7 +734,7 @@ class HallwardenCard extends HTMLElement {
           <header>
             <div>
               <h2>${this._escape(heading)}</h2>
-              <div class="date">${pendingCount} pending · ${this._escape(this._clockLabel())}</div>
+              ${this._renderClockMeta(`${pendingCount} pending`)}
             </div>
             <button type="button" data-refresh>Refresh</button>
           </header>
@@ -866,6 +884,17 @@ class HallwardenCard extends HTMLElement {
     } catch {
       return this._dashboard?.clock_fallback || "";
     }
+  }
+
+  _renderClockMeta(prefix = "") {
+    const showClock = this._config.show_clock !== false;
+    if (!showClock && !prefix) {
+      return "";
+    }
+    const text = showClock
+      ? [prefix, this._clockLabel()].filter(Boolean).join(" · ")
+      : prefix;
+    return text ? `<div class="date">${this._escape(text)}</div>` : "";
   }
 
   _shouldHideCard() {
@@ -1270,6 +1299,7 @@ class HallwardenCardEditor extends HTMLElement {
       layout: "vertical",
       checklist_mode: "inline",
       show_empty: true,
+      show_clock: true,
       show_complete_button: true,
       use_icons: false,
       scale: 1,
@@ -1325,6 +1355,7 @@ class HallwardenCardEditor extends HTMLElement {
         ${this._select("layout", "Layout", ["vertical", "horizontal", "grid", "columns"])}
         ${this._select("checklist_mode", "Checklist mode", ["inline", "popup"])}
         ${this._checkbox("show_empty", "Show empty card")}
+        ${this._checkbox("show_clock", "Show clock")}
         ${this._checkbox("show_complete_button", "Show complete buttons")}
         ${this._checkbox("use_icons", "Use icon buttons")}
       </div>

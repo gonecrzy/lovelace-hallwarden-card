@@ -58,6 +58,9 @@ child_id: 2
 # Hide the whole card when no matching chores are visible.
 show_empty: false
 
+# Hide the visible date/time clock. Single-child cards still show pending count.
+show_clock: false
+
 # Use the card as display-only by hiding checklist and complete buttons.
 show_complete_button: false
 
