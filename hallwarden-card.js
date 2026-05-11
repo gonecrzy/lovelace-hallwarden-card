@@ -1,4 +1,4 @@
-const HALLWARDEN_CARD_VERSION = "2026.05.10-hallwarden-v1";
+const HALLWARDEN_CARD_VERSION = "2026.05.11-025711";
 
 class HallwardenCard extends HTMLElement {
   static version = HALLWARDEN_CARD_VERSION;
@@ -35,6 +35,7 @@ class HallwardenCard extends HTMLElement {
     this._popupPortal = null;
     this._useHaDialog = false;
     this._refreshTimer = null;
+    this._refreshSequence = 0;
   }
 
   set hass(hass) {
@@ -124,6 +125,7 @@ class HallwardenCard extends HTMLElement {
   }
 
   async _refresh() {
+    const requestSequence = ++this._refreshSequence;
     try {
       const response = await fetch(this._endpoint(this._dashboardPath()), {
         headers: this._headers(),
@@ -133,9 +135,17 @@ class HallwardenCard extends HTMLElement {
         throw new Error(`Dashboard API returned ${response.status}`);
       }
 
-      this._dashboard = await response.json();
+      const dashboard = await response.json();
+      if (requestSequence !== this._refreshSequence) {
+        return;
+      }
+
+      this._dashboard = dashboard;
       this._error = "";
     } catch (error) {
+      if (requestSequence !== this._refreshSequence) {
+        return;
+      }
       this._error = error instanceof Error ? error.message : "Failed to load chores";
     }
 
@@ -1444,6 +1454,8 @@ class HallwardenCardEditor extends HTMLElement {
 
 customElements.define("hallwarden-card-editor", HallwardenCardEditor);
 customElements.define("hallwarden-card", HallwardenCard);
+
+console.info(`Hallwarden Card ${HALLWARDEN_CARD_VERSION} loaded`);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
