@@ -38,7 +38,17 @@ class HallwardenCard extends HTMLElement {
   }
 
   set hass(hass) {
+    const previousTimezone = this._clientTimezone();
     this._hass = hass;
+    const nextTimezone = this._clientTimezone();
+    if (
+      this.isConnected &&
+      this._config.api_url &&
+      nextTimezone &&
+      nextTimezone !== previousTimezone
+    ) {
+      this._refresh();
+    }
   }
 
   setConfig(config) {
