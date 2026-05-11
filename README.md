@@ -1,6 +1,6 @@
 # Hallwarden Home Assistant Card
 
-This prototype Lovelace card renders the child-facing chore dashboard from the Hallwarden JSON API.
+This prototype Lovelace card renders the child-facing chore dashboard through the Hallwarden Home Assistant integration by default, with a direct API fallback for standalone installs.
 
 ## Install With HACS Custom Repository
 
@@ -23,17 +23,32 @@ url: /local/hallwarden-card.js
 type: module
 ```
 
-## Card Config
+## Recommended Home Assistant Integration Mode
+
+Use integration mode when the Hallwarden Home Assistant integration is installed:
 
 ```yaml
 type: custom:hallwarden-card
+mode: integration
+title: Chores
+```
+
+In this mode the browser talks only to Home Assistant. Home Assistant stores the Hallwarden API URL and token in the integration config entry and communicates with Hallwarden server-side.
+
+## Direct Standalone Mode
+
+Use direct mode only when you intentionally want the card to call Hallwarden from the browser:
+
+```yaml
+type: custom:hallwarden-card
+mode: direct
 title: Chores
 api_url: http://hallwarden.local:3000
 api_token: dev-ha-token
 refresh_interval: 30
 ```
 
-Use `HALLWARDEN_API_TOKEN` on the Hallwarden server to set the bearer token expected by the API.
+Direct mode requires the Hallwarden API URL to be reachable from the browser and requires CORS to allow the Home Assistant frontend origin. Use `HALLWARDEN_API_TOKEN` on the Hallwarden server to set the bearer token expected by the API.
 
 ## Home Assistant UI Editor
 
@@ -49,8 +64,7 @@ All options are optional unless noted:
 
 ```yaml
 type: custom:hallwarden-card
-api_url: http://hallwarden.local:3000
-api_token: dev-ha-token
+mode: integration
 
 # Show one child only. Omit this to show every child returned by the API.
 child_id: 2

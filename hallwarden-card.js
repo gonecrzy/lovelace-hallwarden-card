@@ -1,4 +1,4 @@
-const HALLWARDEN_CARD_VERSION = "2026.05.11-025711";
+const HALLWARDEN_CARD_VERSION = "2026.05.11-144914";
 
 class HallwardenCard extends HTMLElement {
   static version = HALLWARDEN_CARD_VERSION;
@@ -6,8 +6,7 @@ class HallwardenCard extends HTMLElement {
   static getStubConfig() {
     return {
       title: "Chores",
-      api_url: "http://hallwarden.local:3000",
-      api_token: "",
+      mode: "integration",
       layout: "vertical",
       checklist_mode: "inline",
       show_empty: true,
@@ -42,13 +41,13 @@ class HallwardenCard extends HTMLElement {
     const previousTimezone = this._clientTimezone();
     this._hass = hass;
     const nextTimezone = this._clientTimezone();
-    if (
-      this.isConnected &&
-      this._config.api_url &&
-      nextTimezone &&
-      nextTimezone !== previousTimezone
-    ) {
-      this._refresh();
+    if (this.isConnected) {
+      if (this._canLoad() && nextTimezone && nextTimezone !== previousTimezone) {
+        this._refresh();
+      } else if (this._canLoad() && this._error === this._integrationUnavailableMessage()) {
+        this._refresh();
+        this._scheduleRefresh();
+      }
     }
   }
 
@@ -57,13 +56,19 @@ class HallwardenCard extends HTMLElement {
       throw new Error("Expected type: custom:hallwarden-card");
     }
 
+    const mode = config.mode || "integration";
+    if (!["integration", "direct"].includes(mode)) {
+      throw new Error("mode must be integration or direct");
+    }
+
     const apiUrl = config.api_url || config.base_url;
-    if (!apiUrl) {
-      throw new Error("api_url is required");
+    if (mode === "direct" && !apiUrl) {
+      throw new Error("api_url is required for direct mode");
     }
 
     this._config = {
       title: "Chores",
+      mode,
       refresh_interval: 30,
       show_empty: true,
       show_complete_button: true,
@@ -73,21 +78,31 @@ class HallwardenCard extends HTMLElement {
       scale: 1,
       show_clock: true,
       ...config,
-      api_url: apiUrl,
+      mode,
+      api_url: mode === "direct" ? apiUrl : undefined,
     };
 
     if (this.isConnected) {
-      this._refresh();
-      this._scheduleRefresh();
+      this._startLoading();
     }
   }
 
   connectedCallback() {
     this.setAttribute("data-card-version", HALLWARDEN_CARD_VERSION);
     this._render();
-    if (this._config.api_url) {
+    this._startLoading();
+  }
+
+  _startLoading() {
+    if (this._canLoad()) {
       this._refresh();
       this._scheduleRefresh();
+      return;
+    }
+
+    if (this._config.mode === "integration") {
+      this._error = this._integrationUnavailableMessage();
+      this._render();
     }
   }
 
@@ -124,18 +139,20 @@ class HallwardenCard extends HTMLElement {
     this._refreshTimer = window.setInterval(() => this._refresh(), seconds * 1000);
   }
 
+  _canLoad() {
+    return this._config.mode === "integration"
+      ? Boolean(this._hass?.callWS)
+      : Boolean(this._config.api_url);
+  }
+
+  _integrationUnavailableMessage() {
+    return "Home Assistant integration is not available";
+  }
+
   async _refresh() {
     const requestSequence = ++this._refreshSequence;
     try {
-      const response = await fetch(this._endpoint(this._dashboardPath()), {
-        headers: this._headers(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Dashboard API returned ${response.status}`);
-      }
-
-      const dashboard = await response.json();
+      const dashboard = await this._loadDashboard();
       if (requestSequence !== this._refreshSequence) {
         return;
       }
@@ -152,6 +169,37 @@ class HallwardenCard extends HTMLElement {
     this._render();
   }
 
+  async _callHaService(service, serviceData = {}) {
+    if (!this._hass?.callWS) {
+      throw new Error(this._integrationUnavailableMessage());
+    }
+    const result = await this._hass.callWS({
+      type: "call_service",
+      domain: "hallwarden",
+      service,
+      service_data: serviceData,
+      return_response: true,
+    });
+    return result?.response ?? result;
+  }
+
+  async _loadDashboard() {
+    if (this._config.mode === "integration") {
+      const timezone = this._clientTimezone();
+      return await this._callHaService("get_dashboard", timezone ? { timezone } : {});
+    }
+
+    const response = await fetch(this._endpoint(this._dashboardPath()), {
+      headers: this._headers(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Dashboard API returned ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
   async _openDetail(occurrenceId, childId, options = {}) {
     const detailOccurrenceId = Number(occurrenceId);
     const detailChildId = Number(childId);
@@ -166,16 +214,7 @@ class HallwardenCard extends HTMLElement {
     }
 
     try {
-      const response = await fetch(
-        this._endpoint(`/api/v1/occurrences/${occurrenceId}?child_id=${childId}`),
-        { headers: this._headers() },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Detail request failed: ${response.status}`);
-      }
-
-      this._detail = await response.json();
+      this._detail = await this._loadOccurrence(occurrenceId, childId);
       this._detailChildId = detailChildId;
       this._detailOccurrenceId = detailOccurrenceId;
       await this._ensureHaDialog();
@@ -189,17 +228,17 @@ class HallwardenCard extends HTMLElement {
 
   async _updateChecklist(occurrenceId, itemId, checked) {
     try {
-      const response = await fetch(
-        this._endpoint(`/api/v1/occurrences/${occurrenceId}/checklist/${itemId}`),
-        {
-          method: "POST",
-          headers: this._headers({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ checked }),
-        },
+      const detail = await this._saveChecklistItem(
+        occurrenceId,
+        itemId,
+        this._detailChildId,
+        checked,
       );
-
-      if (!response.ok) {
-        throw new Error(`Checklist update failed: ${response.status}`);
+      if (detail) {
+        this._detail = detail;
+        this._error = "";
+        this._render();
+        return;
       }
 
       await this._openDetail(occurrenceId, this._detailChildId, { refresh: true });
@@ -218,20 +257,18 @@ class HallwardenCard extends HTMLElement {
 
   async _completeOccurrence(occurrenceId, childId) {
     try {
-      const response = await fetch(this._endpoint(`/api/v1/occurrences/${occurrenceId}/complete`), {
-        method: "POST",
-        headers: this._headers({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ completed_by_child_id: Number(childId) }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Complete failed: ${response.status}`);
-      }
+      const dashboard = await this._saveCompletion(occurrenceId, childId);
 
       this._detail = null;
       this._detailChildId = null;
       this._detailOccurrenceId = null;
       this._error = "";
+      if (dashboard) {
+        this._dashboard = dashboard;
+        this._render();
+        return;
+      }
+
       await this._refresh();
     } catch (error) {
       this._error = error instanceof Error ? error.message : "Unable to complete chore";
@@ -241,6 +278,75 @@ class HallwardenCard extends HTMLElement {
 
   _endpoint(path) {
     return `${this._config.api_url.replace(/\/$/, "")}${path}`;
+  }
+
+  async _loadOccurrence(occurrenceId, childId) {
+    if (this._config.mode === "integration") {
+      return await this._callHaService("get_occurrence", {
+        occurrence_id: Number(occurrenceId),
+        child_id: Number(childId),
+      });
+    }
+
+    const response = await fetch(
+      this._endpoint(`/api/v1/occurrences/${occurrenceId}?child_id=${childId}`),
+      { headers: this._headers() },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Detail request failed: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async _saveChecklistItem(occurrenceId, itemId, childId, checked) {
+    if (this._config.mode === "integration") {
+      return await this._callHaService("update_checklist", {
+        occurrence_id: Number(occurrenceId),
+        item_id: Number(itemId),
+        child_id: Number(childId),
+        checked: Boolean(checked),
+      });
+    }
+
+    const response = await fetch(
+      this._endpoint(`/api/v1/occurrences/${occurrenceId}/checklist/${itemId}`),
+      {
+        method: "POST",
+        headers: this._headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ checked }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Checklist update failed: ${response.status}`);
+    }
+
+    return null;
+  }
+
+  async _saveCompletion(occurrenceId, childId) {
+    if (this._config.mode === "integration") {
+      const timezone = this._clientTimezone();
+      return await this._callHaService("complete_occurrence", {
+        occurrence_id: Number(occurrenceId),
+        completed_by_child_id: Number(childId),
+        ...(timezone ? { timezone } : {}),
+      });
+    }
+
+    const response = await fetch(this._endpoint(`/api/v1/occurrences/${occurrenceId}/complete`), {
+      method: "POST",
+      headers: this._headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ completed_by_child_id: Number(childId) }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Complete failed: ${response.status}`);
+    }
+
+    return null;
   }
 
   _dashboardPath() {
@@ -1316,6 +1422,7 @@ class HallwardenCardEditor extends HTMLElement {
     this._config = {
       type: "custom:hallwarden-card",
       title: "Chores",
+      mode: "integration",
       layout: "vertical",
       checklist_mode: "inline",
       show_empty: true,
@@ -1361,6 +1468,7 @@ class HallwardenCardEditor extends HTMLElement {
       </style>
       <div class="editor">
         ${this._input("title", "Title")}
+        ${this._select("mode", "Mode", ["integration", "direct"])}
         ${this._input("api_url", "API URL")}
         ${this._input("api_token", "API token", "password")}
         ${this._input("child_id", "Child ID", "number")}
