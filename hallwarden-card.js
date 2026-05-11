@@ -30,9 +30,14 @@ class HallwardenCard extends HTMLElement {
     this._detailChildId = null;
     this._detailOccurrenceId = null;
     this._error = "";
+    this._hass = null;
     this._popupPortal = null;
     this._useHaDialog = false;
     this._refreshTimer = null;
+  }
+
+  set hass(hass) {
+    this._hass = hass;
   }
 
   setConfig(config) {
@@ -692,7 +697,7 @@ class HallwardenCard extends HTMLElement {
           <header>
             <div>
               <h2>${this._escape(this._config.title || "Chores")}</h2>
-              <div class="date">${this._escape(this._dashboard?.clock_fallback || "")}</div>
+              <div class="date">${this._escape(this._clockLabel())}</div>
             </div>
             <button type="button" data-refresh>Refresh</button>
           </header>
@@ -711,7 +716,7 @@ class HallwardenCard extends HTMLElement {
           <header>
             <div>
               <h2>${this._escape(heading)}</h2>
-              <div class="date">${pendingCount} pending · ${this._escape(this._dashboard?.clock_fallback || "")}</div>
+              <div class="date">${pendingCount} pending · ${this._escape(this._clockLabel())}</div>
             </div>
             <button type="button" data-refresh>Refresh</button>
           </header>
@@ -843,6 +848,24 @@ class HallwardenCard extends HTMLElement {
       return "Child not found.";
     }
     return "No chores are ready.";
+  }
+
+  _clockLabel() {
+    try {
+      const now = new Date();
+      const date = new Intl.DateTimeFormat(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }).format(now);
+      const time = new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(now);
+      return `${date} · ${time}`;
+    } catch {
+      return this._dashboard?.clock_fallback || "";
+    }
   }
 
   _shouldHideCard() {
