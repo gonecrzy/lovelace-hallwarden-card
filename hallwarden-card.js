@@ -1,4 +1,4 @@
-const HALLWARDEN_CARD_VERSION = "2026.05.11-144914";
+const HALLWARDEN_CARD_VERSION = "2026.07.29-224243";
 
 class HallwardenCard extends HTMLElement {
   static version = HALLWARDEN_CARD_VERSION;
@@ -661,14 +661,47 @@ class HallwardenCard extends HTMLElement {
         }
 
         .title {
+          display: inline-flex;
+          align-items: center;
+          gap: calc(5px * var(--ct-spacing-scale));
           min-width: 0;
           font-weight: 900;
           font-size: calc(1rem * var(--ct-chore-scale));
           color: var(--hallwarden-card-text-color, var(--chore-card-text-color, var(--ct-text, #172033))) !important;
         }
 
+        .chore-title-text {
+          min-width: 0;
+        }
+
         .household-icon {
           color: var(--ct-household-icon);
+        }
+
+        .reminder-icon {
+          flex: none;
+          width: calc(15px * var(--ct-chore-scale));
+          height: calc(15px * var(--ct-chore-scale));
+          color: var(--hallwarden-card-reminder-icon-color, var(--ct-household-icon));
+          animation: hallwarden-reminder-pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes hallwarden-reminder-pulse {
+          0%,
+          100% {
+            transform: scale(1);
+            opacity: 0.78;
+          }
+          50% {
+            transform: scale(1.14);
+            opacity: 1;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .reminder-icon {
+            animation: none;
+          }
         }
 
         .actions {
@@ -908,16 +941,25 @@ class HallwardenCard extends HTMLElement {
     const icon = isHousehold
       ? `<span class="household-icon" aria-label="Household chore">★</span>`
       : `<span aria-hidden="true">✓</span>`;
+    const reminderIcon = chore.reminder_enabled ? this._renderReminderIcon() : "";
     const action = this._renderAction(chore, child);
 
     return `
       <div class="chore" data-occurrence-id="${Number(chore.occurrence_id)}">
         <div class="chore-row">
-          <span class="title">${icon} ${this._escape(chore.title)}</span>
+          <span class="title">${icon}<span class="chore-title-text">${this._escape(chore.title)}</span>${reminderIcon}</span>
           <span class="actions">${action}</span>
         </div>
         ${this._renderInlineDetail(chore)}
       </div>
+    `;
+  }
+
+  _renderReminderIcon() {
+    return `
+      <svg class="reminder-icon" viewBox="0 0 24 24" role="img" aria-label="Home Assistant reminders enabled" focusable="false">
+        <path fill="currentColor" d="M12 22a2.7 2.7 0 0 0 2.55-1.8h-5.1A2.7 2.7 0 0 0 12 22Zm7-5h-1V10a6 6 0 0 0-4.5-5.8V3a1.5 1.5 0 0 0-3 0v1.2A6 6 0 0 0 6 10v7H5a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2Zm-3 0H8v-7a4 4 0 0 1 8 0v7Z"></path>
+      </svg>
     `;
   }
 

@@ -134,6 +134,7 @@ card_mod:
       --hallwarden-card-button-background: rgba(15, 23, 42, 0.9);
       --hallwarden-card-button-text-color: #f8fafc;
       --hallwarden-card-household-icon-color: #f59e0b;
+      --hallwarden-card-reminder-icon-color: #f59e0b;
       --hallwarden-card-radius: 18px;
       --hallwarden-card-gap: 12px;
     }
