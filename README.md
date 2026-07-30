@@ -78,6 +78,10 @@ show_clock: false
 # Use the card as display-only by hiding checklist and complete buttons.
 show_complete_button: false
 
+# Keep chores visible, struck through, and sorted at the bottom after completion.
+# They still disappear after the next household-local chore rollover.
+show_completed_until_rollover: true
+
 # Limit visible chores per child card.
 show_quantity: 5
 

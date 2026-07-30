@@ -1,4 +1,4 @@
-const HALLWARDEN_CARD_VERSION = "2026.07.29-224243";
+const HALLWARDEN_CARD_VERSION = "2026.07.30-220301";
 
 class HallwardenCard extends HTMLElement {
   static version = HALLWARDEN_CARD_VERSION;
@@ -12,6 +12,7 @@ class HallwardenCard extends HTMLElement {
       show_empty: true,
       show_clock: true,
       show_complete_button: true,
+      show_completed_until_rollover: false,
       use_icons: false,
       scale: 1,
     };
@@ -72,6 +73,7 @@ class HallwardenCard extends HTMLElement {
       refresh_interval: 30,
       show_empty: true,
       show_complete_button: true,
+      show_completed_until_rollover: false,
       use_icons: false,
       layout: "vertical",
       checklist_mode: "inline",
@@ -185,8 +187,7 @@ class HallwardenCard extends HTMLElement {
 
   async _loadDashboard() {
     if (this._config.mode === "integration") {
-      const timezone = this._clientTimezone();
-      return await this._callHaService("get_dashboard", timezone ? { timezone } : {});
+      return await this._callHaService("get_dashboard", this._dashboardServiceData());
     }
 
     const response = await fetch(this._endpoint(this._dashboardPath()), {
@@ -328,11 +329,10 @@ class HallwardenCard extends HTMLElement {
 
   async _saveCompletion(occurrenceId, childId) {
     if (this._config.mode === "integration") {
-      const timezone = this._clientTimezone();
       return await this._callHaService("complete_occurrence", {
         occurrence_id: Number(occurrenceId),
         completed_by_child_id: Number(childId),
-        ...(timezone ? { timezone } : {}),
+        ...this._dashboardServiceData(),
       });
     }
 
@@ -350,11 +350,35 @@ class HallwardenCard extends HTMLElement {
   }
 
   _dashboardPath() {
+    const params = new URLSearchParams();
     const timezone = this._clientTimezone();
-    if (!timezone) {
+    if (timezone) {
+      params.set("timezone", timezone);
+    }
+    if (this._showCompletedUntilRollover()) {
+      params.set("include_completed", "true");
+    }
+    const query = params.toString();
+    if (!query) {
       return "/api/v1/dashboard";
     }
-    return `/api/v1/dashboard?timezone=${encodeURIComponent(timezone)}`;
+    return `/api/v1/dashboard?${query}`;
+  }
+
+  _dashboardServiceData() {
+    const data = {};
+    const timezone = this._clientTimezone();
+    if (timezone) {
+      data.timezone = timezone;
+    }
+    if (this._showCompletedUntilRollover()) {
+      data.include_completed = true;
+    }
+    return data;
+  }
+
+  _showCompletedUntilRollover() {
+    return this._config.show_completed_until_rollover === true;
   }
 
   _clientTimezone() {
@@ -653,6 +677,10 @@ class HallwardenCard extends HTMLElement {
           box-shadow: var(--ct-chore-box-shadow);
         }
 
+        .chore.is-completed {
+          opacity: 0.64;
+        }
+
         .chore-row {
           display: flex;
           align-items: center;
@@ -672,6 +700,11 @@ class HallwardenCard extends HTMLElement {
 
         .chore-title-text {
           min-width: 0;
+        }
+
+        .chore.is-completed .chore-title-text {
+          text-decoration-line: line-through;
+          text-decoration-thickness: 2px;
         }
 
         .household-icon {
@@ -938,6 +971,7 @@ class HallwardenCard extends HTMLElement {
 
   _renderChore(chore, child) {
     const isHousehold = chore.is_household || chore.assignment_kind === "household";
+    const isCompleted = chore.status === "completed";
     const icon = isHousehold
       ? `<span class="household-icon" aria-label="Household chore">★</span>`
       : `<span aria-hidden="true">✓</span>`;
@@ -945,7 +979,7 @@ class HallwardenCard extends HTMLElement {
     const action = this._renderAction(chore, child);
 
     return `
-      <div class="chore" data-occurrence-id="${Number(chore.occurrence_id)}">
+      <div class="chore${isCompleted ? " is-completed" : ""}" data-occurrence-id="${Number(chore.occurrence_id)}">
         <div class="chore-row">
           <span class="title">${icon}<span class="chore-title-text">${this._escape(chore.title)}</span>${reminderIcon}</span>
           <span class="actions">${action}</span>
@@ -965,6 +999,10 @@ class HallwardenCard extends HTMLElement {
 
   _renderAction(chore, child) {
     if (this._config.show_complete_button === false) {
+      return "";
+    }
+
+    if (chore.status === "completed" || chore.can_complete === false) {
       return "";
     }
 
@@ -1022,6 +1060,18 @@ class HallwardenCard extends HTMLElement {
 
   _visibleChores(child) {
     let chores = child.chores || [];
+    const showCompleted = this._showCompletedUntilRollover();
+    chores = chores.filter((chore) => showCompleted || chore.status !== "completed");
+    if (showCompleted) {
+      chores = chores
+        .map((chore, index) => ({ chore, index }))
+        .sort((left, right) => {
+          const leftRank = left.chore.status === "completed" ? 1 : 0;
+          const rightRank = right.chore.status === "completed" ? 1 : 0;
+          return leftRank - rightRank || left.index - right.index;
+        })
+        .map(({ chore }) => chore);
+    }
     const limit = Number(this._config.show_quantity);
     if (Number.isInteger(limit) && limit >= 0) {
       chores = chores.slice(0, limit);
@@ -1470,6 +1520,7 @@ class HallwardenCardEditor extends HTMLElement {
       show_empty: true,
       show_clock: true,
       show_complete_button: true,
+      show_completed_until_rollover: false,
       use_icons: false,
       scale: 1,
       ...config,
@@ -1527,6 +1578,7 @@ class HallwardenCardEditor extends HTMLElement {
         ${this._checkbox("show_empty", "Show empty card")}
         ${this._checkbox("show_clock", "Show clock")}
         ${this._checkbox("show_complete_button", "Show complete buttons")}
+        ${this._checkbox("show_completed_until_rollover", "Show completed until rollover")}
         ${this._checkbox("use_icons", "Use icon buttons")}
       </div>
     `;
