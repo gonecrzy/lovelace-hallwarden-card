@@ -1,4 +1,4 @@
-const HALLWARDEN_CARD_VERSION = "2026.07.30-220301";
+const HALLWARDEN_CARD_VERSION = "2026.07.30-230942";
 
 class HallwardenCard extends HTMLElement {
   static version = HALLWARDEN_CARD_VERSION;
@@ -36,6 +36,7 @@ class HallwardenCard extends HTMLElement {
     this._useHaDialog = false;
     this._refreshTimer = null;
     this._refreshSequence = 0;
+    this._includeCompletedServiceUnsupported = false;
   }
 
   set hass(hass) {
@@ -187,7 +188,15 @@ class HallwardenCard extends HTMLElement {
 
   async _loadDashboard() {
     if (this._config.mode === "integration") {
-      return await this._callHaService("get_dashboard", this._dashboardServiceData());
+      try {
+        return await this._callHaService("get_dashboard", this._dashboardServiceData());
+      } catch (error) {
+        if (this._isUnsupportedIncludeCompletedError(error)) {
+          this._includeCompletedServiceUnsupported = true;
+          return await this._callHaService("get_dashboard", this._dashboardServiceData());
+        }
+        throw error;
+      }
     }
 
     const response = await fetch(this._endpoint(this._dashboardPath()), {
@@ -371,7 +380,7 @@ class HallwardenCard extends HTMLElement {
     if (timezone) {
       data.timezone = timezone;
     }
-    if (this._showCompletedUntilRollover()) {
+    if (this._showCompletedUntilRollover() && !this._includeCompletedServiceUnsupported) {
       data.include_completed = true;
     }
     return data;
@@ -379,6 +388,14 @@ class HallwardenCard extends HTMLElement {
 
   _showCompletedUntilRollover() {
     return this._config.show_completed_until_rollover === true;
+  }
+
+  _isUnsupportedIncludeCompletedError(error) {
+    if (!this._showCompletedUntilRollover()) {
+      return false;
+    }
+    const message = error instanceof Error ? error.message : String(error ?? "");
+    return message.includes("include_completed");
   }
 
   _clientTimezone() {
